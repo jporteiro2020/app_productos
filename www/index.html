@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Productos</title>
+    <link rel="stylesheet" href="https://unpkg.com/onsenui/css/onsenui.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/onsenui/css/onsen-css-components.min.css"
+    />
+    <script src="https://unpkg.com/onsenui/js/onsenui.min.js"></script>
+    <script src="https://unpkg.com/jquery/dist/jquery.min.js"></script>
+    <script src="js/modelo.js"></script>
+    <script src="js/codigo.js"></script>
+    <script src="js/db.js"></script>
+    <link rel="stylesheet" href="./css/style.css" />
+
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
+    integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
+    integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
+    crossorigin=""></script>
+
+    <script src="cordova.js"></script>
+
+    <!--
+      SCRIPT DE PLUG IN PARA CALCULAR DISTANCIAS  
+    -->
+    <script src="https://npmcdn.com/leaflet-geometryutil"></script>
+
+  </head>
+  <body>
+    <ons-modal direction="up" id="modal_cargando">
+      <div style="text-align: center">
+        <p>
+          <ons-icon icon="md-spinner" size="28px" spin></ons-icon>
+          <span id="spn_cargando"></span>
+        </p>
+      </div>
+    </ons-modal>
+    <ons-splitter>
+      <ons-splitter-side id="menu" side="left" width="220px" collapse>
+        <ons-page>
+          <ons-list>
+            <ons-list-header id="menu-list-header">Usuario</ons-list-header>
+            <ons-list-item onclick="navegar('home.html',true, false)">Home</ons-list-item>
+            <ons-list-item onclick="navegar('busquedas.html',true, false)">Busquedas</ons-list-item>
+          </ons-list>
+        </ons-page>
+      </ons-splitter-side>
+      <ons-splitter-content>
+        <ons-navigator id="nav" page="login.html"></ons-navigator>
+      </ons-splitter-content>
+    </ons-splitter>
+
+    <template id="login.html">
+      <ons-page id="login.html">
+        <div style="text-align: center; margin-top: 200px">
+          <p>
+            <ons-input
+              id="loginTxtEmail"
+              placeholder="Email"
+              modifier="underbar"
+              float
+            ></ons-input>
+          </p>
+          <p>
+            <ons-input
+              id="loginTxtPassword"
+              placeholder="Password"
+              type="password"
+              modifier="underbar"
+            >
+            </ons-input>
+          </p>
+
+          <p style="margin-top: 10%;">
+            <ons-button
+              id="btnLogin"
+              class="button--large--cta"
+              style="width: 59%; margin: 0 auto;"
+              onclick="login()"
+              >Log in</ons-button
+            >
+          </p>
+          <p>
+            <ons-button onclick="navegar('registro.html',true)" modifier="quiet"
+              >Registrarme</ons-button
+            >
+          </p>
+        </div>
+      </ons-page>
+    </template>
+    <template id="home.html">
+      <ons-page id="home.html">
+        <script>
+          searchInput = '';
+          ons.getScriptPage().onShow = obtenerProductos
+        </script>
+        <ons-toolbar>
+          <div class="left">
+            <ons-toolbar-button
+              icon="md-menu"
+              onclick="openMenu()"
+            ></ons-toolbar-button>
+          </div>
+
+          <div class="center">Home</div>
+
+          <div class="right">
+            <ons-toolbar-button
+              icon="fa-door-open"
+              id="btnLogOut"
+              onclick="cerrarSesion()"
+            ></ons-toolbar-button>
+          </div>
+        </ons-toolbar>
+        <p style="text-align: center; margin-top: 10px;">
+          <ons-search-input id= "txtSearch"
+            placeholder="Buscar por nombre"
+            
+            onchange="searchInput =  this.value; obtenerProductos()"
+          ></ons-search-input>
+          <ons-button style=" margin-bottom: -10vw;" modifier = "quiet" onclick="guardarBusqueda()">
+            <ons-icon style="font-size: 5vw;  color: #2979ff;" icon="md-save"></ons-icon>
+          </ons-button><ons-button style=" margin-bottom: -10vw;" modifier = "quiet" onclick="scanCode()">
+            <ons-icon style="font-size: 6vw;  color: #2979ff;" icon="md-camera"></ons-icon>
+          </ons-button>
+        </p>
+        <ons-list id="productos-list">
+
+        </ons-list>
+      </ons-page>
+    </template>
+    <template id="registro.html">
+      <ons-page id="registro.html">
+        <div style="text-align: center; margin-top: 30%">
+          <h3>Registro en la app</h3>
+          <br />
+         <p>
+            <ons-input
+              id="txtEmail"
+              placeholder="Email"
+              modifier="underbar"
+              float
+            ></ons-input>
+          </p>
+          <p>
+            <ons-input
+              id="txtPassword"
+              type="password"
+              placeholder="Password"
+              modifier="underbar"
+              float
+            ></ons-input>
+          </p>
+
+          <p>
+            <ons-button
+              class="button--large--cta"
+              style="width: 59%; margin: 0 auto;"
+              onclick="registrar()"
+              >Registrarme</ons-button
+            >
+          </p>
+          <p>
+            <ons-button onclick="navegar('login.html',true)" modifier="quiet"
+              >Ir al Login</ons-button
+            >
+          </p>
+        </div>
+      </ons-page>
+    </template>
+
+    <template id="busquedas.html">
+      <ons-page id="busquedas.html">
+        <script>
+          ons.getScriptPage().onShow = obtenerBusquedas
+        </script>
+        <ons-toolbar>
+          <div class="left">
+            <ons-toolbar-button
+              icon="md-menu"
+              onclick="openMenu()"
+            ></ons-toolbar-button>
+          </div>
+
+          <div class="center">Busquedas</div>
+
+    
+        </ons-toolbar>
+        <ons-list id="busquedas-list">
+
+        </ons-list>
+      </ons-page>
+    </template>
+
+    <template id="producto.html">
+      <ons-page id="producto.html">
+        <script>
+          searchSucursalesInput = '';
+          ons.getScriptPage().onShow = mostrarDetalles
+        </script>
+        <ons-toolbar>
+          <div class="left"><ons-back-button></ons-back-button></div>
+          <div class="center">Producto</div>
+        </ons-toolbar>
+        <div style="padding: 5vw;">
+
+          <div id="infoText">
+            <p><b>Nombre:</b></p>
+            <p id="producto-nombre"></p>
+            <p><b>Detalle:</b></p>
+            <p id="producto-detalle"></p>
+            <p><b>Precio:</b></p>
+            <p id="producto-precio"></p>
+            <ons-search-input id= "txtSearchMap"
+                placeholder="Ingrese una distancia"
+                onchange="searchSucursalesInput =  this.value; mostrarDetalles()"
+            ></ons-search-input>
+          </div>
+          <div id="mapid" style="height: 60vw;"></div>
+        </div>
+        
+      </ons-page>
+    </template>
+  </body>
+</html>
